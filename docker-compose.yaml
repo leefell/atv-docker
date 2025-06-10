@@ -1,0 +1,30 @@
+services:
+  app:                        # Serviço da aplicação PHP
+    build: .                  # Constrói a imagem usando o Dockerfile no diretório atual
+    ports:                    
+      - "8080:80"             # Mapeia a porta 8080 do host para a porta 80 do container (porta padrão do Apache)
+    depends_on:               # Define que este serviço depende do banco de dados
+      - ServicoBancoDeDados
+
+  ServicoBancoDeDados:        # Serviço do banco de dados MySQL
+    image: mysql:8.0          # Usa a imagem oficial do MySQL versão 8.0
+    container_name: mysql     # Define o nome do container
+    restart: always           # Reinicia o container automaticamente em caso de falha
+    environment:              # Variáveis de ambiente para configuração do MySQL
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: atividadeDocker  # Nome do banco que deve corresponder ao config.ini
+    ports:                    
+      - "3306:3306"           # Mapeia a porta 3306 do MySQL
+    volumes:                  
+      - ./sql/tabela_contato.sql:/docker-entrypoint-initdb.d/tabela_contato.sql  # Executa o script SQL na inicialização
+
+  phpmyadmin:                 # Serviço do phpMyAdmin para gerenciar o banco de dados via interface web
+    image: phpmyadmin/phpmyadmin  # Usa a imagem oficial do phpMyAdmin
+    restart: always           # Reinicia o container automaticamente em caso de falha
+    ports:                    
+      - "8081:80"             # Mapeia a interface web do phpMyAdmin para a porta 8081
+    environment:              
+      PMA_HOST: ServicoBancoDeDados  # Aponta para o serviço do banco de dados
+      MYSQL_ROOT_PASSWORD: root      # Senha do usuário root
+    depends_on:               # Define que este serviço depende do banco de dados
+      - ServicoBancoDeDados
